@@ -1,0 +1,1310 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title>25-CompletionService：如何批量执行异步任务？</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+        <style>
+        html {
+            color: #333;
+            -webkit-text-size-adjust: 100%;
+            -ms-text-size-adjust: 100%;
+            text-rendering: optimizelegibility;
+            font-family: Helvetica Neue, PingFang SC, Verdana, Microsoft Yahei, Hiragino Sans GB, Microsoft Sans Serif, WenQuanYi Micro Hei, sans-serif
+        }
+
+        html.borderbox *,
+        html.borderbox :after,
+        html.borderbox :before {
+            box-sizing: border-box
+        }
+
+        article,
+        aside,
+        blockquote,
+        body,
+        button,
+        code,
+        dd,
+        details,
+        dl,
+        dt,
+        fieldset,
+        figcaption,
+        figure,
+        footer,
+        form,
+        h1,
+        h2,
+        h3,
+        h4,
+        h5,
+        h6,
+        header,
+        hr,
+        input,
+        legend,
+        li,
+        menu,
+        nav,
+        ol,
+        p,
+        pre,
+        section,
+        td,
+        textarea,
+        th,
+        ul {
+            margin: 0;
+            padding: 0
+        }
+
+        article,
+        aside,
+        details,
+        figcaption,
+        figure,
+        footer,
+        header,
+        menu,
+        nav,
+        section {
+            display: block
+        }
+
+        audio,
+        canvas,
+        video {
+            display: inline-block
+        }
+
+        body,
+        button,
+        input,
+        select,
+        textarea {
+            font: 300 1em/1.8 PingFang SC, Lantinghei SC, Microsoft Yahei, Hiragino Sans GB, Microsoft Sans Serif, WenQuanYi Micro Hei, Helvetica, sans-serif
+        }
+
+        button::-moz-focus-inner,
+        input::-moz-focus-inner {
+            padding: 0;
+            border: 0
+        }
+
+        table {
+            border-collapse: collapse;
+            border-spacing: 0
+        }
+
+        fieldset,
+        img {
+            border: 0
+        }
+
+        blockquote {
+            position: relative;
+            color: #999;
+            font-weight: 400;
+            border-left: 1px solid #1abc9c;
+            padding-left: 1em;
+            margin: 1em 3em 1em 2em
+        }
+
+        @media only screen and (max-width: 640px) {
+            blockquote {
+                margin: 1em 0
+            }
+        }
+
+        abbr,
+        acronym {
+            border-bottom: 1px dotted;
+            font-variant: normal
+        }
+
+        abbr {
+            cursor: help
+        }
+
+        del {
+            text-decoration: line-through
+        }
+
+        address,
+        caption,
+        cite,
+        code,
+        dfn,
+        em,
+        th,
+        var {
+            font-style: normal;
+            font-weight: 400
+        }
+
+        ol,
+        ul {
+            list-style: none
+        }
+
+        caption,
+        th {
+            text-align: left
+        }
+
+        q:after,
+        q:before {
+            content: ""
+        }
+
+        sub,
+        sup {
+            font-size: 75%;
+            line-height: 0;
+            position: relative
+        }
+
+        :root sub,
+        :root sup {
+            vertical-align: baseline
+        }
+
+        sup {
+            top: -.5em
+        }
+
+        sub {
+            bottom: -.25em
+        }
+
+        a {
+            color: #1abc9c
+        }
+
+        a:hover {
+            text-decoration: underline
+        }
+
+        .typo a {
+            border-bottom: 1px solid #1abc9c
+        }
+
+        .typo a:hover {
+            border-bottom-color: #555;
+            color: #555
+        }
+
+        .typo a:hover,
+        a,
+        ins {
+            text-decoration: none
+        }
+
+        .typo-u,
+        u {
+            text-decoration: underline
+        }
+
+        mark {
+            background: #fffdd1;
+            border-bottom: 1px solid #ffedce;
+            padding: 2px;
+            margin: 0 5px
+        }
+
+        code,
+        pre,
+        pre tt {
+            font-family: Courier, Courier New, monospace
+        }
+
+        pre {
+            background: hsla(0, 0%, 97%, .7);
+            border: 1px solid #ddd;
+            padding: 1em 1.5em;
+            display: block;
+            -webkit-overflow-scrolling: touch
+        }
+
+        hr {
+            border: none;
+            border-bottom: 1px solid #cfcfcf;
+            margin-bottom: .8em;
+            height: 10px
+        }
+
+        .typo-small,
+        figcaption,
+        small {
+            font-size: .9em;
+            color: #888
+        }
+
+        b,
+        strong {
+            font-weight: 700;
+            color: #000
+        }
+
+        [draggable] {
+            cursor: move
+        }
+
+        .clearfix:after,
+        .clearfix:before {
+            content: "";
+            display: table
+        }
+
+        .clearfix:after {
+            clear: both
+        }
+
+        .clearfix {
+            zoom: 1
+        }
+
+        .textwrap,
+        .textwrap td,
+        .textwrap th {
+            word-wrap: break-word;
+            word-break: break-all
+        }
+
+        .textwrap-table {
+            table-layout: fixed
+        }
+
+        .serif {
+            font-family: Palatino, Optima, Georgia, serif
+        }
+
+        .typo-dl,
+        .typo-form,
+        .typo-hr,
+        .typo-ol,
+        .typo-p,
+        .typo-pre,
+        .typo-table,
+        .typo-ul,
+        .typo dl,
+        .typo form,
+        .typo hr,
+        .typo ol,
+        .typo p,
+        .typo pre,
+        .typo table,
+        .typo ul,
+        blockquote {
+            margin-bottom: 1rem
+        }
+
+        h1,
+        h2,
+        h3,
+        h4,
+        h5,
+        h6 {
+            font-family: PingFang SC, Helvetica Neue, Verdana, Microsoft Yahei, Hiragino Sans GB, Microsoft Sans Serif, WenQuanYi Micro Hei, sans-serif;
+            color: #000;
+            line-height: 1.35
+        }
+
+        .typo-h1,
+        .typo-h2,
+        .typo-h3,
+        .typo-h4,
+        .typo-h5,
+        .typo-h6,
+        .typo h1,
+        .typo h2,
+        .typo h3,
+        .typo h4,
+        .typo h5,
+        .typo h6 {
+            margin-top: 1.2em;
+            margin-bottom: .6em;
+            line-height: 1.35
+        }
+
+        .typo-h1,
+        .typo h1 {
+            font-size: 2em
+        }
+
+        .typo-h2,
+        .typo h2 {
+            font-size: 1.8em
+        }
+
+        .typo-h3,
+        .typo h3 {
+            font-size: 1.6em
+        }
+
+        .typo-h4,
+        .typo h4 {
+            font-size: 1.4em
+        }
+
+        .typo-h5,
+        .typo-h6,
+        .typo h5,
+        .typo h6 {
+            font-size: 1.2em
+        }
+
+        .typo-ul,
+        .typo ul {
+            margin-left: 1.3em;
+            list-style: disc
+        }
+
+        .typo-ol,
+        .typo ol {
+            list-style: decimal;
+            margin-left: 1.9em
+        }
+
+        .typo-ol ol,
+        .typo-ol ul,
+        .typo-ul ol,
+        .typo-ul ul,
+        .typo li ol,
+        .typo li ul {
+            margin-bottom: .8em;
+            margin-left: 2em
+        }
+
+        .typo-ol ul,
+        .typo-ul ul,
+        .typo li ul {
+            list-style: circle
+        }
+
+        .typo-table td,
+        .typo-table th,
+        .typo table caption,
+        .typo table td,
+        .typo table th {
+            border: 1px solid #ddd;
+            padding: .5em 1em;
+            color: #666
+        }
+
+        .typo-table th,
+        .typo table th {
+            background: #fbfbfb
+        }
+
+        .typo-table thead th,
+        .typo table thead th {
+            background: hsla(0, 0%, 95%, .7)
+        }
+
+        .typo table caption {
+            border-bottom: none
+        }
+
+        .typo-input,
+        .typo-textarea {
+            -webkit-appearance: none;
+            border-radius: 0
+        }
+
+        .typo-em,
+        .typo em,
+        caption,
+        legend {
+            color: #000;
+            font-weight: inherit
+        }
+
+        .typo-em {
+            position: relative
+        }
+
+        .typo-em:after {
+            position: absolute;
+            top: .65em;
+            left: 0;
+            width: 100%;
+            overflow: hidden;
+            white-space: nowrap;
+            content: "\30FB\30FB\30FB\30FB\30FB\30FB\30FB\30FB\30FB\30FB\30FB\30FB\30FB\30FB\30FB\30FB\30FB\30FB\30FB\30FB\30FB\30FB\30FB\30FB\30FB\30FB\30FB\30FB\30FB\30FB\30FB\30FB\30FB\30FB\30FB\30FB\30FB\30FB\30FB\30FB\30FB\30FB\30FB\30FB\30FB\30FB\30FB\30FB\30FB\30FB\30FB\30FB\30FB\30FB\30FB\30FB\30FB\30FB\30FB\30FB\30FB\30FB\30FB\30FB\30FB\30FB\30FB\30FB\30FB\30FB\30FB\30FB\30FB\30FB\30FB\30FB\30FB\30FB\30FB\30FB\30FB\30FB\30FB\30FB\30FB\30FB\30FB\30FB\30FB\30FB\30FB\30FB\30FB\30FB\30FB\30FB\30FB\30FB\30FB\30FB"
+        }
+
+        .typo img {
+            max-width: 100%
+        }
+
+        .common-content {
+            font-weight: 400;
+            color: #353535;
+            line-height: 1.75rem;
+            white-space: normal;
+            word-break: normal;
+            font-size: 1rem
+        }
+
+        .common-content img {
+            display: block;
+            max-width: 100%;
+            background-color: #eee
+        }
+
+        .common-content audio,
+        .common-content video {
+            width: 100%;
+            background-color: #eee
+        }
+
+        .common-content center,
+        .common-content font {
+            margin-top: 1rem;
+            display: inline-block
+        }
+
+        .common-content center {
+            width: 100%
+        }
+
+        .common-content pre {
+            margin-top: 1rem;
+            padding-left: 0;
+            padding-right: 0;
+            position: relative;
+            overflow: hidden
+        }
+
+        .common-content pre code {
+            font-size: .8rem;
+            font-family: Consolas, Liberation Mono, Menlo, monospace, Courier;
+            display: block;
+            width: 100%;
+            box-sizing: border-box;
+            padding-left: 1rem;
+            padding-right: 1rem;
+            overflow-x: auto
+        }
+
+        .common-content hr {
+            border: none;
+            margin-top: 1.5rem;
+            margin-bottom: 1.5rem;
+            border-top: 1px solid #f5f5f5;
+            height: 1px;
+            background: none
+        }
+
+        .common-content b,
+        .common-content h1,
+        .common-content h2,
+        .common-content h3,
+        .common-content h4,
+        .common-content h5,
+        .common-content strong {
+            font-weight: 700
+        }
+
+        .common-content h1,
+        .common-content h2 {
+            font-size: 1.125rem;
+            margin-bottom: .45rem
+        }
+
+        .common-content h3,
+        .common-content h4,
+        .common-content h5 {
+            font-size: 1rem;
+            margin-bottom: .45rem
+        }
+
+        .common-content p {
+            font-weight: 400;
+            color: #353535;
+            margin-top: .15rem
+        }
+
+        .common-content .orange {
+            color: #ff5a05
+        }
+
+        .common-content .reference {
+            font-size: 1rem;
+            color: #888
+        }
+
+        .custom-rich-content h1 {
+            margin-top: 0;
+            font-weight: 400;
+            font-size: 15.25px;
+            border-bottom: 1px solid #eee;
+            line-height: 2.8
+        }
+
+        .custom-rich-content li,
+        .custom-rich-content p {
+            font-size: 14px;
+            color: #888;
+            line-height: 1.6
+        }
+
+        table.hljs-ln {
+            margin-bottom: 0;
+            border-spacing: 0;
+            border-collapse: collapse
+        }
+
+        table.hljs-ln,
+        table.hljs-ln tbody,
+        table.hljs-ln td,
+        table.hljs-ln tr {
+            box-sizing: border-box
+        }
+
+        table.hljs-ln td {
+            padding: 0;
+            border: 0
+        }
+
+        table.hljs-ln td.hljs-ln-numbers {
+            min-width: 15px;
+            color: rgba(27, 31, 35, .3);
+            text-align: right;
+            white-space: nowrap;
+            cursor: pointer;
+            user-select: none
+        }
+
+        table.hljs-ln td.hljs-ln-code,
+        table.hljs-ln td.hljs-ln-numbers {
+            font-family: SFMono-Regular, Consolas, Liberation Mono, Menlo, Courier, monospace;
+            font-size: 12px;
+            line-height: 20px;
+            vertical-align: top
+        }
+
+        table.hljs-ln td.hljs-ln-code {
+            position: relative;
+            padding-right: 10px;
+            padding-left: 10px;
+            overflow: visible;
+            color: #24292e;
+            word-wrap: normal;
+            white-space: pre
+        }
+
+        video::-webkit-media-controls {
+            overflow: hidden !important
+        }
+
+        video::-webkit-media-controls-enclosure {
+            width: calc(100% + 32px);
+            margin-left: auto
+        }
+
+        ._29HP61GA_0 {
+            max-width:800px;
+            margin:0 auto;
+            margin-bottom: 20px;
+            font-weight: 400;
+            color: #353535;
+            line-height: 1.76;
+            white-space: normal;
+            word-break: normal;
+            font-size: 17px;
+            -webkit-transition: background-color .3s ease;
+            transition: background-color .3s ease
+        }
+
+        ._29HP61GA_0 .MathJax_Display {
+            overflow: auto
+        }
+
+        ._29HP61GA_0 .poster {
+            position: fixed;
+            left: -10000px;
+            top: -10000px;
+            overflow: hidden;
+            padding: 1rem;
+            background: #ececec
+        }
+
+        ._29HP61GA_0 .richcontent-pre-copy {
+            font-size: 13px;
+            color: #888;
+            position: absolute;
+            right: 1em;
+            top: .5em;
+            cursor: pointer;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none
+        }
+
+        ._29HP61GA_0 .richcontent-pre-copy .iconfont {
+            font-size: 12px;
+            margin-right: .2em
+        }
+
+        ._29HP61GA_0 a {
+            color: #fa8919;
+            border-bottom: 1px solid #fa8919
+        }
+
+        ._29HP61GA_0 img {
+            display: block;
+            max-width: 100%;
+            position: relative;
+            left: 50%;
+            -webkit-transform: translateX(-50%);
+            transform: translateX(-50%);
+            background-color: #eee;
+            vertical-align: top;
+            border-radius: 0
+        }
+
+        ._29HP61GA_0 audio,
+        ._29HP61GA_0 video {
+            width: 100%;
+            background-color: #eee
+        }
+
+        ._29HP61GA_0 pre {
+            margin-top: 16px;
+            padding: 34px 0 0;
+            margin-bottom: 30px;
+            position: relative;
+            border-radius: 6px;
+            background: rgba(246, 247, 251, .749);
+            border: 0
+        }
+
+        ._29HP61GA_0 pre code {
+            font-size: 12px;
+            font-family: Consolas, Liberation Mono, Menlo, monospace, Courier;
+            display: block;
+            -webkit-box-sizing: border-box;
+            box-sizing: border-box;
+            margin-left: 16px;
+            margin-right: 16px;
+            overflow-x: scroll
+        }
+
+        ._29HP61GA_0 pre code:after {
+            content: "";
+            height: 30px;
+            width: 100%;
+            display: block
+        }
+
+        ._29HP61GA_0 hr {
+            border: none;
+            margin-top: 1.5rem;
+            margin-bottom: 1.5rem;
+            border-top: 1px solid #f5f5f5;
+            height: 1px;
+            background: none
+        }
+
+        ._29HP61GA_0 h1,
+        ._29HP61GA_0 h2,
+        ._29HP61GA_0 h3,
+        ._29HP61GA_0 h4,
+        ._29HP61GA_0 h5 {
+            margin-bottom: 20px;
+            margin-top: 0;
+            font-weight: 700
+        }
+
+        ._29HP61GA_0 b,
+        ._29HP61GA_0 strong {
+            font-weight: 700
+        }
+
+        ._29HP61GA_0 h1 {
+            font-size: 21px
+        }
+
+        ._29HP61GA_0 h2 {
+            font-size: 20px
+        }
+
+        ._29HP61GA_0 h3 {
+            font-size: 19px
+        }
+
+        ._29HP61GA_0 h4 {
+            font-size: 18px
+        }
+
+        ._29HP61GA_0 h5 {
+            font-size: 17px
+        }
+
+        ._29HP61GA_0 center,
+        ._29HP61GA_0 p {
+            font-weight: 400;
+            color: #353535;
+            margin-top: 0;
+            margin-bottom: 30px;
+            word-break: break-word
+        }
+
+        ._29HP61GA_0 center {
+            text-align: center
+        }
+
+        ._29HP61GA_0 blockquote {
+            margin-top: 0;
+            margin-bottom: 34px;
+            border-left: 3px solid #e8e8e8;
+            padding-left: 17px;
+            color: #353535
+        }
+
+        ._29HP61GA_0 blockquote p {
+            margin-top: 0;
+            margin-bottom: 0
+        }
+
+        ._29HP61GA_0 ol,
+        ._29HP61GA_0 ul {
+            margin-bottom: 30px
+        }
+
+        ._29HP61GA_0 ol p,
+        ._29HP61GA_0 ul p {
+            margin-top: 0;
+            margin-bottom: 0
+        }
+
+        ._29HP61GA_0 ol {
+            list-style: decimal;
+            margin-left: 20px
+        }
+
+        ._29HP61GA_0 ul li {
+            padding-left: 17px;
+            position: relative;
+            margin-bottom: 10px
+        }
+
+        ._29HP61GA_0 ul li:after {
+            content: "";
+            height: 6px;
+            width: 6px;
+            border-radius: 50%;
+            background: #353535;
+            position: absolute;
+            top: 10px;
+            left: 0
+        }
+
+        ._29HP61GA_0 .orange {
+            color: #fa8919
+        }
+
+        ._29HP61GA_0 .reference {
+            color: #888
+        }
+
+        ._29HP61GA_0 .m-right {
+            text-align: right
+        }
+
+        ._29HP61GA_0 .m-center {
+            text-align: center;
+            display: block
+        }
+
+        ._29HP61GA_0 .m-gray {
+            color: #888
+        }
+
+        ._29HP61GA_0 .m-small {
+            font-size: 15px
+        }
+
+        ._29HP61GA_0 table.hljs-ln {
+            margin-bottom: 0;
+            border-spacing: 0;
+            border-collapse: collapse
+        }
+
+        ._29HP61GA_0 table.hljs-ln,
+        ._29HP61GA_0 table.hljs-ln tbody,
+        ._29HP61GA_0 table.hljs-ln td,
+        ._29HP61GA_0 table.hljs-ln tr {
+            -webkit-box-sizing: border-box;
+            box-sizing: border-box
+        }
+
+        ._29HP61GA_0 table.hljs-ln td {
+            padding: 0;
+            border: 0
+        }
+
+        ._29HP61GA_0 table.hljs-ln td.hljs-ln-numbers {
+            min-width: 15px;
+            font-size: 12px;
+            color: rgba(27, 31, 35, .3);
+            text-align: right;
+            white-space: nowrap;
+            cursor: pointer;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none
+        }
+
+        ._29HP61GA_0 table.hljs-ln td.hljs-ln-code,
+        ._29HP61GA_0 table.hljs-ln td.hljs-ln-numbers {
+            font-family: SFMono-Regular, Consolas, Liberation Mono, Menlo, Courier, monospace;
+            line-height: 20px;
+            vertical-align: top
+        }
+
+        ._29HP61GA_0 table.hljs-ln td.hljs-ln-code {
+            position: relative;
+            padding-right: 10px;
+            padding-left: 10px;
+            overflow: visible;
+            font-size: 13px;
+            color: #666;
+            word-wrap: normal;
+            white-space: pre
+        }
+
+    </style>
+</head>
+<body>
+<div class="_29HP61GA_0">
+<h1>25-CompletionService：如何批量执行异步任务？</h1>
+<p>在<a href="https://time.geekbang.org/column/article/91292">《23 | Future：如何用多线程实现最优的“烧水泡茶”程序？》</a>的最后，我给你留了道思考题，如何优化一个询价应用的核心代码？如果采用“ThreadPoolExecutor+Future”的方案，你的优化结果很可能是下面示例代码这样：用三个线程异步执行询价，通过三次调用Future的get()方法获取询价结果，之后将询价结果保存在数据库中。</p><pre><code>// 创建线程池
+ExecutorService executor =
+  Executors.newFixedThreadPool(3);
+// 异步向电商S1询价
+Future&lt;Integer&gt; f1 = 
+  executor.submit(
+    ()-&gt;getPriceByS1());
+// 异步向电商S2询价
+Future&lt;Integer&gt; f2 = 
+  executor.submit(
+    ()-&gt;getPriceByS2());
+// 异步向电商S3询价
+Future&lt;Integer&gt; f3 = 
+  executor.submit(
+    ()-&gt;getPriceByS3());
+    
+// 获取电商S1报价并异步保存
+executor.execute(
+  ()-&gt;save(f1.get()));
+  
+// 获取电商S2报价并异步保存
+executor.execute(
+  ()-&gt;save(f2.get())
+  
+// 获取电商S3报价并异步保存  
+executor.execute(
+  ()-&gt;save(f3.get())
+</code></pre><p>上面的这个方案本身没有太大问题，但是有个地方的处理需要你注意，那就是如果获取电商S1报价的耗时很长，那么即便获取电商S2报价的耗时很短，也无法让保存S2报价的操作先执行，因为这个主线程都阻塞在了 <code>f1.get()</code> 操作上。这点小瑕疵你该如何解决呢？</p><p>估计你已经想到了，增加一个阻塞队列，获取到S1、S2、S3的报价都进入阻塞队列，然后在主线程中消费阻塞队列，这样就能保证先获取到的报价先保存到数据库了。下面的示例代码展示了如何利用阻塞队列实现先获取到的报价先保存到数据库。</p><pre><code>// 创建阻塞队列
+BlockingQueue&lt;Integer&gt; bq =
+  new LinkedBlockingQueue&lt;&gt;();
+//电商S1报价异步进入阻塞队列  
+executor.execute(()-&gt;
+  bq.put(f1.get()));
+//电商S2报价异步进入阻塞队列  
+executor.execute(()-&gt;
+  bq.put(f2.get()));
+//电商S3报价异步进入阻塞队列  
+executor.execute(()-&gt;
+  bq.put(f3.get()));
+//异步保存所有报价  
+for (int i=0; i&lt;3; i++) {
+  Integer r = bq.take();
+  executor.execute(()-&gt;save(r));
+}  
+</code></pre><h2>利用CompletionService实现询价系统</h2><p>不过在实际项目中，并不建议你这样做，因为Java SDK并发包里已经提供了设计精良的CompletionService。利用CompletionService不但能帮你解决先获取到的报价先保存到数据库的问题，而且还能让代码更简练。</p><!-- [[[read_end]]] --><p>CompletionService的实现原理也是内部维护了一个阻塞队列，当任务执行结束就把任务的执行结果加入到阻塞队列中，不同的是CompletionService是把任务执行结果的Future对象加入到阻塞队列中，而上面的示例代码是把任务最终的执行结果放入了阻塞队列中。</p><p><strong>那到底该如何创建CompletionService呢？</strong></p><p>CompletionService接口的实现类是ExecutorCompletionService，这个实现类的构造方法有两个，分别是：</p><ol>
+<li><code>ExecutorCompletionService(Executor executor)</code>；</li>
+<li><code>ExecutorCompletionService(Executor executor, BlockingQueue&lt;Future&lt;V&gt;&gt; completionQueue)</code>。</li>
+</ol><p>这两个构造方法都需要传入一个线程池，如果不指定completionQueue，那么默认会使用无界的LinkedBlockingQueue。任务执行结果的Future对象就是加入到completionQueue中。</p><p>下面的示例代码完整地展示了如何利用CompletionService来实现高性能的询价系统。其中，我们没有指定completionQueue，因此默认使用无界的LinkedBlockingQueue。之后通过CompletionService接口提供的submit()方法提交了三个询价操作，这三个询价操作将会被CompletionService异步执行。最后，我们通过CompletionService接口提供的take()方法获取一个Future对象（前面我们提到过，加入到阻塞队列中的是任务执行结果的Future对象），调用Future对象的get()方法就能返回询价操作的执行结果了。</p><pre><code>// 创建线程池
+ExecutorService executor = 
+  Executors.newFixedThreadPool(3);
+// 创建CompletionService
+CompletionService&lt;Integer&gt; cs = new 
+  ExecutorCompletionService&lt;&gt;(executor);
+// 异步向电商S1询价
+cs.submit(()-&gt;getPriceByS1());
+// 异步向电商S2询价
+cs.submit(()-&gt;getPriceByS2());
+// 异步向电商S3询价
+cs.submit(()-&gt;getPriceByS3());
+// 将询价结果异步保存到数据库
+for (int i=0; i&lt;3; i++) {
+  Integer r = cs.take().get();
+  executor.execute(()-&gt;save(r));
+}
+</code></pre><h2>CompletionService接口说明</h2><p>下面我们详细地介绍一下CompletionService接口提供的方法，CompletionService接口提供的方法有5个，这5个方法的方法签名如下所示。</p><p>其中，submit()相关的方法有两个。一个方法参数是<code>Callable&lt;V&gt; task</code>，前面利用CompletionService实现询价系统的示例代码中，我们提交任务就是用的它。另外一个方法有两个参数，分别是<code>Runnable task</code>和<code>V result</code>，这个方法类似于ThreadPoolExecutor的 <code>&lt;T&gt; Future&lt;T&gt; submit(Runnable task, T result)</code> ，这个方法在<a href="https://time.geekbang.org/column/article/91292">《23 | Future：如何用多线程实现最优的“烧水泡茶”程序？》</a>中我们已详细介绍过，这里不再赘述。</p><p>CompletionService接口其余的3个方法，都是和阻塞队列相关的，take()、poll()都是从阻塞队列中获取并移除一个元素；它们的区别在于如果阻塞队列是空的，那么调用 take() 方法的线程会被阻塞，而 poll() 方法会返回 null 值。 <code>poll(long timeout, TimeUnit unit)</code> 方法支持以超时的方式获取并移除阻塞队列头部的一个元素，如果等待了 timeout unit时间，阻塞队列还是空的，那么该方法会返回 null 值。</p><pre><code>Future&lt;V&gt; submit(Callable&lt;V&gt; task);
+Future&lt;V&gt; submit(Runnable task, V result);
+Future&lt;V&gt; take() 
+  throws InterruptedException;
+Future&lt;V&gt; poll();
+Future&lt;V&gt; poll(long timeout, TimeUnit unit) 
+  throws InterruptedException;
+</code></pre><h2>利用CompletionService实现Dubbo中的Forking Cluster</h2><p>Dubbo中有一种叫做<strong>Forking的集群模式</strong>，这种集群模式下，支持<strong>并行地调用多个查询服务，只要有一个成功返回结果，整个服务就可以返回了</strong>。例如你需要提供一个地址转坐标的服务，为了保证该服务的高可用和性能，你可以并行地调用3个地图服务商的API，然后只要有1个正确返回了结果r，那么地址转坐标这个服务就可以直接返回r了。这种集群模式可以容忍2个地图服务商服务异常，但缺点是消耗的资源偏多。</p><pre><code>geocoder(addr) {
+  //并行执行以下3个查询服务， 
+  r1=geocoderByS1(addr);
+  r2=geocoderByS2(addr);
+  r3=geocoderByS3(addr);
+  //只要r1,r2,r3有一个返回
+  //则返回
+  return r1|r2|r3;
+}
+</code></pre><p>利用CompletionService可以快速实现 Forking 这种集群模式，比如下面的示例代码就展示了具体是如何实现的。首先我们创建了一个线程池executor 、一个CompletionService对象cs和一个<code>Future&lt;Integer&gt;</code>类型的列表 futures，每次通过调用CompletionService的submit()方法提交一个异步任务，会返回一个Future对象，我们把这些Future对象保存在列表futures中。通过调用 <code>cs.take().get()</code>，我们能够拿到最快返回的任务执行结果，只要我们拿到一个正确返回的结果，就可以取消所有任务并且返回最终结果了。</p><pre><code>// 创建线程池
+ExecutorService executor =
+  Executors.newFixedThreadPool(3);
+// 创建CompletionService
+CompletionService&lt;Integer&gt; cs =
+  new ExecutorCompletionService&lt;&gt;(executor);
+// 用于保存Future对象
+List&lt;Future&lt;Integer&gt;&gt; futures =
+  new ArrayList&lt;&gt;(3);
+//提交异步任务，并保存future到futures 
+futures.add(
+  cs.submit(()-&gt;geocoderByS1()));
+futures.add(
+  cs.submit(()-&gt;geocoderByS2()));
+futures.add(
+  cs.submit(()-&gt;geocoderByS3()));
+// 获取最快返回的任务执行结果
+Integer r = 0;
+try {
+  // 只要有一个成功返回，则break
+  for (int i = 0; i &lt; 3; ++i) {
+    r = cs.take().get();
+    //简单地通过判空来检查是否成功返回
+    if (r != null) {
+      break;
+    }
+  }
+} finally {
+  //取消所有任务
+  for(Future&lt;Integer&gt; f : futures)
+    f.cancel(true);
+}
+// 返回结果
+return r;
+</code></pre><h2>总结</h2><p>当需要批量提交异步任务的时候建议你使用CompletionService。CompletionService将线程池Executor和阻塞队列BlockingQueue的功能融合在了一起，能够让批量异步任务的管理更简单。除此之外，CompletionService能够让异步任务的执行结果有序化，先执行完的先进入阻塞队列，利用这个特性，你可以轻松实现后续处理的有序性，避免无谓的等待，同时还可以快速实现诸如Forking Cluster这样的需求。</p><p>CompletionService的实现类ExecutorCompletionService，需要你自己创建线程池，虽看上去有些啰嗦，但好处是你可以让多个ExecutorCompletionService的线程池隔离，这种隔离性能避免几个特别耗时的任务拖垮整个应用的风险。</p><h2>课后思考</h2><p>本章使用CompletionService实现了一个询价应用的核心功能，后来又有了新的需求，需要计算出最低报价并返回，下面的示例代码尝试实现这个需求，你看看是否存在问题呢？</p><pre><code>// 创建线程池
+ExecutorService executor = 
+  Executors.newFixedThreadPool(3);
+// 创建CompletionService
+CompletionService&lt;Integer&gt; cs = new 
+  ExecutorCompletionService&lt;&gt;(executor);
+// 异步向电商S1询价
+cs.submit(()-&gt;getPriceByS1());
+// 异步向电商S2询价
+cs.submit(()-&gt;getPriceByS2());
+// 异步向电商S3询价
+cs.submit(()-&gt;getPriceByS3());
+// 将询价结果异步保存到数据库
+// 并计算最低报价
+AtomicReference&lt;Integer&gt; m =
+  new AtomicReference&lt;&gt;(Integer.MAX_VALUE);
+for (int i=0; i&lt;3; i++) {
+  executor.execute(()-&gt;{
+    Integer r = null;
+    try {
+      r = cs.take().get();
+    } catch (Exception e) {}
+    save(r);
+    m.set(Integer.min(m.get(), r));
+  });
+}
+return m;
+</code></pre><p>欢迎在留言区与我分享你的想法，也欢迎你在留言区记录你的思考过程。感谢阅读，如果你觉得这篇文章对你有帮助的话，也欢迎把它分享给更多的朋友。</p><p><img src="https://static001.geekbang.org/resource/image/cf/aa/cf393cd748a4f0e6451807c4b61843aa.jpg" alt=""></p><h2>精选留言：</h2>
+        <ul>
+        
+<li>
+    <div>
+        <div style="color: #888;font-size:15.25px;font-weight:400;line-height:1.2">
+            Corner  2019-04-25 09:12:31
+        </div>
+        <div style="color:#353535;font-weight:400;white-space:normal;word-break:break-all;line-height:1.6">
+            1.AtomicReference&lt;Integer&gt;的get方法应该改成使用cas方法<br>2.最后筛选最小结果的任务是异步执行的，应该在return之前做同步，所以最好使用sumit提交该任务便于判断任务的完成<br>最后请教老师一下，第一个例子中为什么主线程会阻塞在f1.get()方法呢？ [1赞]
+        </div>
+        
+    </div>
+</li>
+            
+<br/>
+
+<li>
+    <div>
+        <div style="color: #888;font-size:15.25px;font-weight:400;line-height:1.2">
+            天涯煮酒  2019-04-25 09:05:02
+        </div>
+        <div style="color:#353535;font-weight:400;white-space:normal;word-break:break-all;line-height:1.6">
+            先调用m.get()并跟r比较，再调用m.set()，这里存在竞态条件，线程并不安全 [1赞]
+        </div>
+        
+    </div>
+</li>
+            
+<br/>
+
+<li>
+    <div>
+        <div style="color: #888;font-size:15.25px;font-weight:400;line-height:1.2">
+            张天屹  2019-04-25 11:33:20
+        </div>
+        <div style="color:#353535;font-weight:400;white-space:normal;word-break:break-all;line-height:1.6">
+            老师我对第一个例子还是有疑问，f.get()已经提交给了线程池执行了，为什么会说阻塞主线程呢？ 
+        </div>
+        
+    </div>
+</li>
+            
+<br/>
+
+<li>
+    <div>
+        <div style="color: #888;font-size:15.25px;font-weight:400;line-height:1.2">
+            空知  2019-04-25 11:23:25
+        </div>
+        <div style="color:#353535;font-weight:400;white-space:normal;word-break:break-all;line-height:1.6">
+            老师,感觉开篇的阻塞队列解决future.get阻塞 存在问题,阻塞队列也是把执行get结果加到队列,然后take出来,如果线程池不够大, f1的submit 和 get占满了线程,其他线程的执行都需要等待...还是会阻塞<br>如果线程池足够大,原始方案就可以直接申请新的线程执行 
+        </div>
+        
+    </div>
+</li>
+            
+<br/>
+
+<li>
+    <div>
+        <div style="color: #888;font-size:15.25px;font-weight:400;line-height:1.2">
+            朱晋君  2019-04-25 10:53:57
+        </div>
+        <div style="color:#353535;font-weight:400;white-space:normal;word-break:break-all;line-height:1.6">
+            1.m.set(Integer.min(m.get(), r))不是原子操作<br>2.catch住exception后，是否需要给r一个默认值呢<br>3.return 等不到异步结果<br><br>另外我有1个问题<br>我觉得第一个例子后面3个线程异步保存，不应该阻塞在f1.get，get方法会阻塞，但是只阻塞当前线程啊<br><br> 
+        </div>
+        
+    </div>
+</li>
+            
+<br/>
+
+<li>
+    <div>
+        <div style="color: #888;font-size:15.25px;font-weight:400;line-height:1.2">
+            西行寺咕哒子  2019-04-25 10:24:16
+        </div>
+        <div style="color:#353535;font-weight:400;white-space:normal;word-break:break-all;line-height:1.6">
+            试过返回值是2147483647，也就是int的最大值。没有等待操作完成就猴急的返回了。 m.set(Integer.min(m.get(), r)... 这个操作也不是原子操作。<br>试着自己弄了一下：<br>public Integer run(){<br>        &#47;&#47; 创建线程池<br>        ExecutorService executor = Executors.newFixedThreadPool(3);<br>        &#47;&#47; 创建 CompletionService<br>        CompletionService&lt;Integer&gt; cs = new ExecutorCompletionService&lt;&gt;(executor);<br>        AtomicReference&lt;Integer&gt; m = new AtomicReference&lt;&gt;(Integer.MAX_VALUE);<br>        &#47;&#47; 异步向电商 S1 询价<br>        cs.submit(()-&gt;getPriceByS1());<br>        &#47;&#47; 异步向电商 S2 询价<br>        cs.submit(()-&gt;getPriceByS2());<br>        &#47;&#47; 异步向电商 S3 询价<br>        cs.submit(()-&gt;getPriceByS3());<br>        &#47;&#47; 将询价结果异步保存到数据库<br>        &#47;&#47; 并计算最低报价<br>        for (int i=0; i&lt;3; i++) {<br>            Integer r = logIfError(()-&gt;cs.take().get());<br>            executor.execute(()-&gt; save(r));<br>            m.getAndUpdate(v-&gt;Integer.min(v, r));<br>        }<br>        return m.get();<br>    }<br>不知道可不可行 
+        </div>
+        
+    </div>
+</li>
+            
+<br/>
+
+<li>
+    <div>
+        <div style="color: #888;font-size:15.25px;font-weight:400;line-height:1.2">
+            美美  2019-04-25 10:21:58
+        </div>
+        <div style="color:#353535;font-weight:400;white-space:normal;word-break:break-all;line-height:1.6">
+            第一个例子 我感觉f1.get()没有阻塞主线程啊  f1.get()是在线程池里异步执行的啊 
+        </div>
+        
+    </div>
+</li>
+            
+<br/>
+
+<li>
+    <div>
+        <div style="color: #888;font-size:15.25px;font-weight:400;line-height:1.2">
+            黄海峰  2019-04-25 10:08:08
+        </div>
+        <div style="color:#353535;font-weight:400;white-space:normal;word-break:break-all;line-height:1.6">
+            我实际测试了第一段代码，确实是异步的，f1.get不会阻塞主线程。。。<br><br>public static void main(String[] args) {<br>        ExecutorService executor = Executors.newFixedThreadPool(3);<br>        Future&lt;Integer&gt; f1 = executor.submit(()-&gt;getPriceByS1());<br>        Future&lt;Integer&gt; f2 = executor.submit(()-&gt;getPriceByS2());<br>        Future&lt;Integer&gt; f3 = executor.submit(()-&gt;getPriceByS3());<br><br>        executor.execute(()-&gt; {<br>            try {<br>                save(f1.get());<br>            } catch (InterruptedException e) {<br>                e.printStackTrace();<br>            } catch (ExecutionException e) {<br>                e.printStackTrace();<br>            }<br>        });<br>        executor.execute(()-&gt; {<br>            try {<br>                save(f2.get());<br>            } catch (InterruptedException e) {<br>                e.printStackTrace();<br>            } catch (ExecutionException e) {<br>                e.printStackTrace();<br>            }<br>        });<br>        executor.execute(()-&gt; {<br>            try {<br>                save(f3.get());<br>            } catch (InterruptedException e) {<br>                e.printStackTrace();<br>            } catch (ExecutionException e) {<br>                e.printStackTrace();<br>            }<br>        });<br>    }<br><br>    private static Integer getPriceByS1() {<br>        try {<br>            Thread.sleep(10000);<br>        } catch (InterruptedException e) {<br>            e.printStackTrace();<br>        }<br>        return 1;<br>    }<br>    private static Integer getPriceByS2() {<br>        try {<br>            Thread.sleep(1000);<br>        } catch (InterruptedException e) {<br>            e.printStackTrace();<br>        }<br>        return 2;<br>    }<br>    private static Integer getPriceByS3() {<br>        try {<br>            Thread.sleep(1000);<br>        } catch (InterruptedException e) {<br>            e.printStackTrace();<br>        }<br>        return 3;<br>    }<br>    private static void save(Integer i) {<br>        System.out.println(&quot;save &quot; + i);<br>    } 
+        </div>
+        
+    </div>
+</li>
+            
+<br/>
+
+<li>
+    <div>
+        <div style="color: #888;font-size:15.25px;font-weight:400;line-height:1.2">
+            美美  2019-04-25 10:06:18
+        </div>
+        <div style="color:#353535;font-weight:400;white-space:normal;word-break:break-all;line-height:1.6">
+            第一个例子 f1.get()是线程池里异步执行的 为啥会阻塞主线程 
+        </div>
+        
+    </div>
+</li>
+            
+<br/>
+
+<li>
+    <div>
+        <div style="color: #888;font-size:15.25px;font-weight:400;line-height:1.2">
+            刘章周  2019-04-25 09:58:15
+        </div>
+        <div style="color:#353535;font-weight:400;white-space:normal;word-break:break-all;line-height:1.6">
+            m.get()和m.set()不是原子性操作，正确代码是:do{int expect = m.get();int min= Integer.min(expect,r);}while(!m.compareAndSet(expect,min))。老师，是这样吗？ 
+        </div>
+        
+    </div>
+</li>
+            
+<br/>
+
+<li>
+    <div>
+        <div style="color: #888;font-size:15.25px;font-weight:400;line-height:1.2">
+            Zach_  2019-04-25 09:54:24
+        </div>
+        <div style="color:#353535;font-weight:400;white-space:normal;word-break:break-all;line-height:1.6">
+            1.思考题: 这是个先判断后执行的复合操作，多线程下依赖上一个线程写入的结果。这里的m.set()方法应该不是原子操作，应该保证set的原子性吧<br><br>2.问题: 老师，这里的cs.take().get()方法我有个疑问:<br><br>a.当执行某个询价任务的过程中抛出了异常，这个异常是不是在Future&lt;T&gt;里面啊？ <br>是通过cs.take().get()里的get()方法取到异常了吗？ <br>还是直接在阻塞get()的过程中抛出来了啊？ <br><br>b.如果是阻塞在get()这里，此时任务线程被interrupt()了，那我们是不是就获取不到询价结果而是在get()过程中捕获了一个异常啊?<br><br>或者评论区的童鞋回答一下我也很感谢啊！ 
+        </div>
+        
+    </div>
+</li>
+            
+<br/>
+
+<li>
+    <div>
+        <div style="color: #888;font-size:15.25px;font-weight:400;line-height:1.2">
+            张三  2019-04-25 09:45:02
+        </div>
+        <div style="color:#353535;font-weight:400;white-space:normal;word-break:break-all;line-height:1.6">
+            打卡。 
+        </div>
+        
+    </div>
+</li>
+            
+<br/>
+
+<li>
+    <div>
+        <div style="color: #888;font-size:15.25px;font-weight:400;line-height:1.2">
+            黄海峰  2019-04-25 09:37:40
+        </div>
+        <div style="color:#353535;font-weight:400;white-space:normal;word-break:break-all;line-height:1.6">
+            老师，有个地方不理解。。第一段代码中这个f1.get不是在线程池里执行的吗？为何会阻塞了主线程？<br><br>&#47;&#47;获取电商 S1 报价并异步保存<br>executor.execute(<br>  ()-&gt;save(f1.get())); 
+        </div>
+        
+    </div>
+</li>
+            
+<br/>
+
+<li>
+    <div>
+        <div style="color: #888;font-size:15.25px;font-weight:400;line-height:1.2">
+            渔夫  2019-04-25 09:28:29
+        </div>
+        <div style="color:#353535;font-weight:400;white-space:normal;word-break:break-all;line-height:1.6">
+            m.set(Integer.min(m.get(), r));<br><br>这个逻辑执行应该互斥，但是 set&#47;get 之间无法形成原子操作，应该使用 getAndUpdate 来完成该逻辑 
+        </div>
+        
+    </div>
+</li>
+            
+<br/>
+
+<li>
+    <div>
+        <div style="color: #888;font-size:15.25px;font-weight:400;line-height:1.2">
+            张天屹  2019-04-25 09:27:51
+        </div>
+        <div style="color:#353535;font-weight:400;white-space:normal;word-break:break-all;line-height:1.6">
+            我觉得问题出在return m这里需要等待三个线程执行完成，但是并没有。<br>...<br>AtomicReference&lt;Integer&gt; m = new AtomicReference&lt;&gt;(Integer.MAX_VALUE);<br>CountDownLatch latch = new CountDownLatch(3);<br>for(int i=0; i&lt;3; i++) {<br>	executor.execute(()-&gt;{<br>		Integer r = null;<br>		try {<br>			r = cs.take().get();<br>		} catch(Exception e) {}<br>		save(r);<br>		m.set(Integer.min(m.get(), r));<br>		latch.countDown();<br>	});<br>	latch.await();<br>	return m;<br>} 
+        </div>
+        
+    </div>
+</li>
+            
+<br/>
+
+<li>
+    <div>
+        <div style="color: #888;font-size:15.25px;font-weight:400;line-height:1.2">
+            周治慧  2019-04-25 09:16:07
+        </div>
+        <div style="color:#353535;font-weight:400;white-space:normal;word-break:break-all;line-height:1.6">
+            存在问题，在执行executor.execute的时候多个线程是非阻塞的异步执行，可能还没等到线程执行完的时候就直接返回结果了，大部分情况会出现是integer的最大值。改进的办法是在遍历时去取阻塞队列中的值后再执行set操作，因为在get取阻塞队列中的值的过程是一个阻塞，最后在利用线程池的非阻塞异步操作去保存结果。 
+        </div>
+        
+    </div>
+</li>
+            
+<br/>
+
+<li>
+    <div>
+        <div style="color: #888;font-size:15.25px;font-weight:400;line-height:1.2">
+            undifined  2019-04-25 09:05:02
+        </div>
+        <div style="color:#353535;font-weight:400;white-space:normal;word-break:break-all;line-height:1.6">
+            老师 用 CompletionService 和用 CompletionFuture 查询，然后用 whenComplete 或者 thenAcceptEither 这些方法的区别是什么，我觉得用 CompletionFuture 更直观些；<br>老师可以在下一讲的时候说一下上一讲的思考题正确答案吗，谢谢老师 
+        </div>
+        
+    </div>
+</li>
+            
+<br/>
+
+<li>
+    <div>
+        <div style="color: #888;font-size:15.25px;font-weight:400;line-height:1.2">
+            苏志辉  2019-04-25 08:57:03
+        </div>
+        <div style="color:#353535;font-weight:400;white-space:normal;word-break:break-all;line-height:1.6">
+            m.set和get存在静态条件不是原子的，可能存在设置和不是最小值 
+        </div>
+        
+    </div>
+</li>
+            
+<br/>
+
+<li>
+    <div>
+        <div style="color: #888;font-size:15.25px;font-weight:400;line-height:1.2">
+            空空空空  2019-04-25 08:55:50
+        </div>
+        <div style="color:#353535;font-weight:400;white-space:normal;word-break:break-all;line-height:1.6">
+            算低价的时候是用三个不同的线程去计算，是异步的，因此可能算出来并不是预期的结果<br>老师，这样理解对吗？ 
+        </div>
+        
+    </div>
+</li>
+            
+<br/>
+
+<li>
+    <div>
+        <div style="color: #888;font-size:15.25px;font-weight:400;line-height:1.2">
+            郑晨Cc  2019-04-25 02:46:53
+        </div>
+        <div style="color:#353535;font-weight:400;white-space:normal;word-break:break-all;line-height:1.6">
+            executor.execute（Callable）提交任务是非阻塞的 return m；很大概率返回 Integer.Maxvalue，而且老师为了确保返回这个max还特意加入了save这个阻塞的方法 
+        </div>
+        
+    </div>
+</li>
+            </ul>
+</div>
+</body>
+</html>
